@@ -1,0 +1,121 @@
+substitutions:
+  device_version: "1.0.0"
+
+globals:
+  - id: room_topic
+    type: std::string
+    initial_value: '"room_presence/${room_name_lower}${tracker_id}"'
+
+esphome:
+  name: "${device_name_id}"
+  platform: ESP32
+  board: esp32dev
+
+packages:
+  default_sensors: !include /home/esphome/config/common/packages/default_sensors.yaml
+  default_wifi: !include /home/esphome/config/common/packages/default_wifi.yaml
+  default_mqtt: !include /home/esphome/config/common/packages/default_mqtt.yaml
+  default_api: !include /home/esphome/config/common/packages/default_api.yaml
+
+esp32_ble_tracker:
+  on_ble_advertise:
+    - then:
+        - lambda: |-
+            if (x.get_ibeacon().has_value()) {
+                std::string uuid;
+                esp_bt_uuid_t raw_uuid = x.get_ibeacon().value().get_uuid().get_uuid();
+
+                char sbuf[64];
+                char *bpos = sbuf;
+
+                switch (raw_uuid.len) {
+                    case ESP_UUID_LEN_128:
+                        for (int8_t i = 0; i <= 15; i++) {
+                            sprintf(bpos, "%02x", raw_uuid.uuid.uuid128[i]);
+                            bpos += 2;
+
+                            //if (i == 6 || i == 8 || i == 10 || i == 12)
+                              //    sprintf(bpos++, "-");
+                        }
+
+                        sbuf[47] = '\0';
+                        uuid.assign(sbuf);
+                        break;
+                    default:
+                        uuid = x.get_ibeacon().value().get_uuid().to_string();
+                        std::transform(uuid.begin(), uuid.end(), uuid.begin(), [](unsigned char c){ return std::tolower(c); });
+                        break;
+                }
+                
+                char minor_major[11] = {0};
+                uint16_t major = x.get_ibeacon().value().get_major();
+                uint16_t minor = x.get_ibeacon().value().get_minor();
+                sprintf(minor_major, "-%i-%i",major,minor);
+                uuid.append(minor_major);
+                
+                bool allowed = true;
+                String uuid_s = uuid.c_str();
+                uuid_s.replace("-","");
+                uuid_s.toLowerCase();
+                ESP_LOGD("ble_adv", "Tag to match %s", uuid_s.c_str());
+                
+                String uuid_t = "";
+                String uuid_test = "";
+                
+              	if (id(allowed_on)) {
+              		allowed = false;
+              		
+              		int size = sizeof(id(allowed_list))/sizeof(id(allowed_list)[0]);
+              		
+              		for (uint32_t x = 0; x < size; x++) {
+              		  uuid_t = id(allowed_list)[x];
+              		  uuid_t.replace("-","");
+              		  uuid_t.toLowerCase();
+              		  
+              		  ESP_LOGD("ble_adv", "Testing %s", uuid_t.c_str());
+              		  
+              			if (uuid_s == uuid_t) {
+              			  ESP_LOGD("ble_adv", "Matching %s = %s", uuid_t.c_str(), uuid_s.c_str());
+              				allowed = true;
+              				break;
+              			}
+              		}
+              	}
+                
+                if(allowed){
+                  // Calculate the distance
+                  int8_t tx_power = id(tx_1m_distance);
+                  float dist = pow(10, (float)(tx_power - x.get_rssi()) / (10 * 2));
+                  
+                  if(dist > id(max_distance)){
+                    ESP_LOGD("ble_adv", "Ignoring MQTT room update for '%s' (%s): %.03fm (%d rssi)",
+                             x.get_name().c_str(), uuid.c_str(), dist, x.get_rssi());
+                  }
+                  else{
+                    ESP_LOGD("ble_adv", "Sending MQTT room update for '%s' (%s): %.03fm (%d rssi)",
+                             x.get_name().c_str(), uuid.c_str(), dist, x.get_rssi());
+                             
+                             
+                    id(mqtt_client).publish_json(id(room_topic), [=](JsonObject root) {
+                        root["id"] = uuid;
+                        root["name"] = x.get_name();
+                        root["distance"] = dist;
+                    });
+                  }
+                }
+            }
+
+text_sensor:
+  - platform: template
+    icon: "mdi:bluetooth"
+    name: "${device_name} Room"
+    lambda: |-
+      return {"${room_name}"};
+
+sensor:
+  - platform: template
+    icon: "mdi:bluetooth"
+    name: "${device_name} ID"
+    accuracy_decimals: 0
+    lambda: |-
+      return ${tracker_id};

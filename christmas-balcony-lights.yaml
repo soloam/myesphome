@@ -1,0 +1,13 @@
+substitutions:
+  device_name: "Christmas Balcony Lights"
+  device_name_id: "christmas-balcony-lights"
+  default_state: ALWAYS_OFF
+
+# Enable logging
+#debug:
+
+#logger:
+#  level: debug
+
+packages:
+  ble_tracker: !include "/home/esphome/config/common/templates/template_blitzwolf_shp6_10a.yaml"

@@ -1,0 +1,17 @@
+text_sensor:
+  - <<: !include /home/esphome/config/common/text_sensor/text_sensor_uptime_human.yaml
+  - <<: !include /home/esphome/config/common/text_sensor/text_sensor_esphome_version.yaml
+  - <<: !include /home/esphome/config/common/text_sensor/text_sensor_wifi_info.yaml
+  - <<: !include /home/esphome/config/common/text_sensor/text_sensor_device_version.yaml
+  - <<: !include /home/esphome/config/common/text_sensor/text_sensor_hostname.yaml
+
+binary_sensor:
+  - <<: !include /home/esphome/config/common/binary_sensor/binary_sensor_connected.yaml
+
+sensor:
+  - <<: !include /home/esphome/config/common/sensor/sensor_uptime.yaml
+  - <<: !include /home/esphome/config/common/sensor/sensor_wifi_signal.yaml
+  - <<: !include /home/esphome/config/common/sensor/sensor_wifi_signal_perc.yaml
+
+button:
+  - <<: !include /home/esphome/config/common/button/button_restart.yaml

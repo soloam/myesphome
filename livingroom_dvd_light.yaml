@@ -1,0 +1,13 @@
+substitutions:
+  type: light
+  device_name: "Livingroom DVD Light"
+  device_name_id: "livingroom-dvd-light"
+
+# Enable logging
+debug:
+
+logger:
+  level: debug
+
+packages:
+  ble_tracker: !include "/home/esphome/config/common/templates/template_sonoff_basic.yaml"

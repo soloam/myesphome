@@ -1,0 +1,108 @@
+substitutions:
+  device_version: "1.0.0"
+
+# Node definition (Blitzwolf)
+esphome:
+  name: ${device_name_id}
+  platform: ESP8266
+  board: esp8285
+
+# Enable Packages
+packages:
+  default_sensors: !include /home/esphome/config/common/packages/default_sensors.yaml
+  default_wifi: !include /home/esphome/config/common/packages/default_wifi.yaml
+  default_mqtt: !include /home/esphome/config/common/packages/default_mqtt.yaml
+  default_api: !include /home/esphome/config/common/packages/default_api.yaml
+
+# Needed for Total Daily Energy sensor below
+time:
+  - platform: sntp
+    id: sntp_time
+    servers: !secret sntp_server
+    on_time:
+      - seconds: /30
+        then:
+          - mqtt.publish:
+              topic: ${mqtt_base_topic}/switch/relay/state
+              payload: !lambda |-
+                return id(relay).state ? "ON" : "OFF";
+
+# Binary Sensor to allow relay to be switched when physical button is pressed
+binary_sensor:
+  - platform: gpio
+    id: btn
+    internal: true
+    pin:
+      number: GPIO13
+    on_press:
+      - switch.toggle: relay
+
+output:
+  # Relay state led
+  - platform: esp8266_pwm
+    id: state_led
+    pin:
+      number: GPIO2
+      inverted: true
+
+switch:
+  # Switch to turn Blitzwolf on/off and turn on/off blue LED
+  - platform: gpio
+    name: "${device_name}"
+    pin: GPIO15
+    id: relay
+    on_turn_on:
+      - light.turn_on: blue_led
+    on_turn_off:
+      - light.turn_off: blue_led
+    restore_mode: ${default_state} #Try to restore relay state after reboot/power-loss event.
+    #RESTORE_DEFAULT_OFF (Default) - Attempt to restore state and default to OFF if not possible to restore. Uses flash write cycles.
+    #RESTORE_DEFAULT_ON - Attempt to restore state and default to ON. Uses flash write cycles.
+    #ALWAYS_OFF - Always initialize the pin as OFF on bootup. Does not use flash write cycles.
+    #ALWAYS_ON - Always initialize the pin as ON on bootup. Does not use flash write cycles.
+
+# Uses the red LED as a status indicator
+status_led:
+  pin:
+    number: GPIO00
+    inverted: true
+
+light:
+  # Relay state light
+  - platform: monochromatic
+    output: state_led
+    id: blue_led
+
+sensor:
+  # Plug consumption data
+  - platform: hlw8012
+    sel_pin:
+      number: GPIO12
+      inverted: true
+    cf_pin: GPIO05
+    cf1_pin: GPIO14
+    change_mode_every: 3
+    update_interval: 3s
+    # Calibrated with help of a TP-Link HS110 + incandescent bulbs 40W+60W
+    current_resistor: "0.00282"
+    voltage_divider: "909"
+    current:
+      name: "${device_name} Amperage"
+      unit_of_measurement: A
+      accuracy_decimals: 3
+    voltage:
+      name: "${device_name} Voltage"
+      unit_of_measurement: V
+      accuracy_decimals: 1
+    power:
+      name: "${device_name} Wattage"
+      unit_of_measurement: W
+      id: "power"
+      accuracy_decimals: 1
+  - platform: total_daily_energy
+    name: "${device_name} Total Daily Energy"
+    power_id: "power"
+    filters:
+      # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001
+    unit_of_measurement: kWh

@@ -1,0 +1,4 @@
+platform: wifi_signal
+id: wifi_db_signal
+name: "${device_name} WiFi Signal"
+update_interval: 60s

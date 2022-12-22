@@ -1,0 +1,56 @@
+substitutions:
+  device_version: "1.0.0"
+
+esphome:
+  name: ${device_name_id}
+  platform: ESP8266
+  board: esp01_1m
+
+# Enable Packages
+packages:
+  default_sensors: !include /home/esphome/config/common/packages/default_sensors.yaml
+  default_wifi: !include /home/esphome/config/common/packages/default_wifi.yaml
+  default_mqtt: !include /home/esphome/config/common/packages/default_mqtt.yaml
+  default_api: !include /home/esphome/config/common/packages/default_api.yaml
+
+binary_sensor:
+  # Button
+  - platform: gpio
+    pin:
+      number: GPIO0
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "${device_name} Button"
+    on_press:
+      - light.toggle: light_1
+  # External Button
+  - platform: gpio
+    name: "${device_name} External Button"
+    pin:
+      number: GPIO14
+      mode: INPUT_PULLUP
+      inverted: True
+    id: button_1
+    on_press:
+      then:
+        - light.toggle: light_1
+
+output:
+  - platform: gpio
+    pin: GPIO12
+    id: relay_1
+
+# Switch
+light:
+  - platform: binary
+    name: "${device_name}"
+    id: light_1
+    output: relay_1
+
+#Status Led
+status_led:
+  pin:
+    number: GPIO13
+    inverted: yes

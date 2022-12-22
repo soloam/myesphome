@@ -1,0 +1,7 @@
+platform: template
+name: "${device_name} Hostname"
+icon: "mdi:network"
+entity_category: diagnostic
+lambda: |-
+  return {network::get_use_address()};
+update_interval: 60s

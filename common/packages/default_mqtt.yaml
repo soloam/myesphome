@@ -1,0 +1,8 @@
+substitutions:
+  mqtt_base_topic: "esphome/${device_name_id}"
+
+mqtt:
+  broker: !secret mqtt_broker
+  discovery: false
+  id: mqtt_client
+  topic_prefix: ${mqtt_base_topic}

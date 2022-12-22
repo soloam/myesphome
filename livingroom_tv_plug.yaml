@@ -1,0 +1,13 @@
+substitutions:
+  device_name: "Livingroom TV Plug"
+  device_name_id: "livingroom-tv-plug"
+  default_state: ALWAYS_ON
+
+# Enable logging
+#debug:
+
+#logger:
+#  level: debug
+
+packages:
+  ble_tracker: !include "/home/esphome/config/common/templates/template_blitzwolf_shp6_10a.yaml"

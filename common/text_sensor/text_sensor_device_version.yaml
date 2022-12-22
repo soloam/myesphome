@@ -1,0 +1,6 @@
+platform: template
+name: "${device_name} Version"
+icon: "mdi:new-box"
+entity_category: diagnostic
+lambda: |-
+  return {"${device_version}"};

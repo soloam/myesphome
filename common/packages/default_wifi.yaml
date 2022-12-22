@@ -1,0 +1,20 @@
+substitutions:
+  ssid_pos: !secret wifi_ap_ssid
+
+wifi:
+  id: wifi_conf
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: true
+  domain: !secret wifi_domain
+  ap:
+    ssid: "${device_name}"
+    password: !secret wifi_ap_password
+
+captive_portal:
+
+ota:
+  password: !secret ota_password
+
+web_server:
+  port: 80

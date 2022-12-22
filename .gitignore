@@ -1,0 +1,23 @@
+# Ignore All By Default
+*
+
+# Sync only this configs
+!/balcony1_heat_pump.yaml
+!/christmas-balcony-lights.yaml
+!/christmas-decorations.yaml
+!/christmas-tree.yaml
+!/kidsroom1_cabinet_light.yaml
+!/kitchen_wine_cooler.yaml
+!/livingroom_dvd_light.yaml
+!/livingroom_tv_plug.yaml
+!/wakeup.yaml
+
+#Includes
+!/common
+!/common/**
+
+#Remove Not Ok Files
+common/packages/default_ble_tracking.yaml
+
+# Sync this file 
+!/.gitignore
